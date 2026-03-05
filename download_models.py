@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # /// script
-# dependencies = ["huggingface_hub>=0.24", "typer>=0.12"]
+# dependencies = ["huggingface_hub>=0.24", "typer>=0.12", "python-dotenv>=1.0"]
 # ///
 """
 Download GGUF model files from HuggingFace with parallel downloads and SHA256 freshness checks.
@@ -15,12 +15,16 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import os
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
 
 import typer
+from dotenv import load_dotenv
 from huggingface_hub import HfApi, hf_hub_download
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
@@ -135,7 +139,7 @@ MODELS: list[ModelEntry] = [
 def get_hf_file_info(repo_id: str, filename: str) -> HfFileInfo:
     """Fetch existence and LFS SHA256 for a specific file from the HuggingFace API."""
     try:
-        info = HfApi().model_info(repo_id, files_metadata=True)
+        info = HfApi().model_info(repo_id, files_metadata=True, token=os.getenv("HF_TOKEN"))
         for sibling in info.siblings or []:
             if sibling.rfilename == filename:
                 sha256 = sibling.lfs.sha256 if sibling.lfs is not None else None
@@ -194,6 +198,7 @@ def process_model(entry: ModelEntry, output_dir: Path) -> DownloadResult:
                 repo_id=entry.repo_id,
                 filename=entry.hf_filename,
                 local_dir=output_dir,
+                token=os.getenv("HF_TOKEN"),
             )
         )
 

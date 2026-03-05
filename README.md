@@ -38,12 +38,12 @@ Each model also attempts to download an optional `mmproj-F16.gguf` multimodal pr
 uv run download_models.py
 ```
 
-`uv` reads the inline dependency metadata and installs `huggingface_hub` and `typer` into an isolated environment automatically.
+`uv` reads the inline dependency metadata and installs `huggingface_hub`, `typer`, and `python-dotenv` into an isolated environment automatically.
 
 ### With pip
 
 ```bash
-pip install "huggingface_hub>=0.24" "typer>=0.12"
+pip install "huggingface_hub>=0.24" "typer>=0.12" "python-dotenv>=1.0"
 python download_models.py
 ```
 
@@ -56,10 +56,14 @@ Usage: download_models.py [OPTIONS]
   SHA256 freshness checks.
 
 Options:
-  --output-dir PATH   Directory to save downloaded model files [default: ~/models]
-  --workers INTEGER   Number of parallel download workers [default: 4]
-  --list              Print all configured models and exit without downloading
-  --help              Show this message and exit.
+  --output-dir  PATH                Directory to save downloaded model files
+                                    [default: ~/models]
+  --workers     INTEGER RANGE [1<=x<=16]
+                                    Number of parallel download workers
+                                    [default: 4]
+  --list                            Print all configured models and exit
+                                    without downloading
+  --help                            Show this message and exit.
 ```
 
 ### Examples
@@ -100,7 +104,17 @@ ModelEntry(
 
 ## HuggingFace Authentication
 
-For gated models, set your HuggingFace token before running:
+The script loads your HuggingFace token from a `.env` file in the project root (gitignored by default):
+
+```bash
+# Create the .env file
+echo 'HF_TOKEN=hf_...' > .env
+
+# Then run as usual
+uv run download_models.py
+```
+
+Alternatively, you can export the token as an environment variable:
 
 ```bash
 export HF_TOKEN=hf_...
