@@ -23,8 +23,10 @@ from pathlib import Path
 import typer
 from dotenv import load_dotenv
 from huggingface_hub import HfApi, hf_hub_download
+from huggingface_hub.utils import disable_progress_bars
 
 load_dotenv()
+disable_progress_bars()
 
 logger = logging.getLogger(__name__)
 
@@ -205,7 +207,8 @@ def process_model(entry: ModelEntry, output_dir: Path) -> DownloadResult:
         if entry.hf_filename != entry.local_filename:
             downloaded_path.replace(local_path)
 
-        typer.echo(f"[done]        {label}")
+        size_gib = local_path.stat().st_size / (1024**3)
+        typer.echo(f"[done]        {label} ({size_gib:.2f} GiB)")
         return DownloadResult(entry, "downloaded")
 
     except Exception as exc:
