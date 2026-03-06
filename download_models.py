@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
 # /// script
-# dependencies = ["huggingface_hub>=0.24", "typer>=0.12", "python-dotenv>=1.0"]
+# dependencies = ["huggingface_hub>=1.5", "typer>=0.24", "python-dotenv>=1.2"]
 # ///
 """
 Download GGUF model files from HuggingFace with parallel downloads and freshness checks.
 
 Freshness is checked via local SHA256 cache (instant), then size comparison (instant),
 then full SHA256 hash (thorough). Repo metadata is fetched once per repo, not per file.
+Downloads use hf_xet (bundled with huggingface_hub >=0.32) for chunk-based deduplication
+and faster transfers.
 
 Usage:
     python download_models.py [--output-dir ~/models] [--workers 4]
 
 Dependencies:
-    pip install "huggingface_hub>=0.24" "typer>=0.12" "python-dotenv>=1.0"
+    pip install "huggingface_hub>=1.5" "typer>=0.24" "python-dotenv>=1.2"
 
 Requires Python 3.11+ (hashlib.file_digest).
 """

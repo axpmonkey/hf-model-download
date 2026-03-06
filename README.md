@@ -4,7 +4,7 @@ A single-file Python script that downloads a curated set of GGUF model files fro
 
 ## Features
 
-- **Parallel downloads** — configurable worker pool (default: 4)
+- **Parallel downloads** — configurable worker pool (default: 4), accelerated by `hf_xet` chunk-based transfers
 - **Fast freshness checks** — local SHA256 cache makes repeat runs near-instant; falls back to size comparison then full hash
 - **Batched metadata** — fetches repo metadata once per repo (not per file), with a progress bar
 - **Optional files** — multimodal projector (`mmproj`) files are silently skipped when not present in a repo
@@ -43,7 +43,7 @@ uv run download_models.py
 ### With pip
 
 ```bash
-pip install "huggingface_hub>=0.24" "typer>=0.12" "python-dotenv>=1.0"
+pip install "huggingface_hub>=1.5" "typer>=0.24" "python-dotenv>=1.2"
 python download_models.py
 ```
 
