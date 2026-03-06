@@ -5,7 +5,7 @@ A single-file Python script that downloads a curated set of GGUF model files fro
 ## Features
 
 - **Parallel downloads** — configurable worker pool (default: 4)
-- **Smart freshness checks** — size comparison skips obviously outdated files instantly; SHA256 verifies the rest
+- **Fast freshness checks** — local SHA256 cache makes repeat runs near-instant; falls back to size comparison then full hash
 - **Batched metadata** — fetches repo metadata once per repo (not per file), with a progress bar
 - **Optional files** — multimodal projector (`mmproj`) files are silently skipped when not present in a repo
 - **Zero install friction** — inline PEP 723 metadata means `uv run` handles dependencies automatically
@@ -81,13 +81,14 @@ uv run download_models.py --list
 
 ## How Freshness Checking Works
 
-For each repo, the script fetches metadata once (batched per repo, not per file) and then checks each file:
+For each repo, the script fetches metadata once (batched per repo, not per file) and then checks each file through a layered strategy:
 
-1. **Size check** — if the local file size differs from the remote, it's outdated; skip straight to re-download
-2. **SHA256 check** — if sizes match, compute the local SHA256 and compare against the LFS hash
-3. **No metadata** — if neither hash nor size is available, re-download conservatively
+1. **Cache lookup** — if a `.hf-sha256-cache.json` entry exists with matching file size and mtime, use the cached SHA256 (no disk I/O beyond `stat`)
+2. **Size check** — if the local file size differs from the remote, it's outdated; skip straight to re-download
+3. **Full SHA256 hash** — if sizes match but no cache hit, compute the hash and update the cache
+4. **No metadata** — if neither hash nor size is available from HuggingFace, re-download conservatively
 
-This makes re-runs fast — only genuinely new or updated files are transferred.
+The first run hashes every file (slow on large models), but subsequent runs are near-instant thanks to the cache. The cache is stored in the output directory and auto-updates after downloads.
 
 ## Customizing the Model List
 
