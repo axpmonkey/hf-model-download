@@ -16,6 +16,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import os
+from collections import defaultdict
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
@@ -127,25 +128,27 @@ MODELS: list[ModelEntry] = [
 ]
 
 
-def get_hf_file_info(repo_id: str, filename: str) -> HfFileInfo:
-    """Fetch existence and LFS SHA256 for a specific file from the HuggingFace API."""
+def fetch_repo_file_info(repo_id: str, filenames: set[str]) -> dict[str, HfFileInfo]:
+    """Fetch existence and LFS SHA256 for all requested filenames in a repo in one API call."""
+    not_found = {f: HfFileInfo(exists=False, sha256=None) for f in filenames}
     try:
         info = HfApi().model_info(repo_id, files_metadata=True, token=os.getenv("HF_TOKEN"))
+        result: dict[str, HfFileInfo] = {}
         for sibling in info.siblings or []:
-            if sibling.rfilename == filename:
+            if sibling.rfilename in filenames:
                 sha256 = sibling.lfs.sha256 if sibling.lfs is not None else None
-                return HfFileInfo(exists=True, sha256=sha256)
-        return HfFileInfo(exists=False, sha256=None)
+                result[sibling.rfilename] = HfFileInfo(exists=True, sha256=sha256)
+        return {**not_found, **result}
     except Exception:
-        logger.debug("Failed to fetch metadata for %s/%s", repo_id, filename, exc_info=True)
-        return HfFileInfo(exists=False, sha256=None)
+        logger.debug("Failed to fetch metadata for %s", repo_id, exc_info=True)
+        return not_found
 
 
 def compute_sha256(path: Path) -> str:
-    """Compute SHA256 of a local file in 8 MiB chunks."""
+    """Compute SHA256 of a local file in 32 MiB chunks."""
     hasher = hashlib.sha256()
     with path.open("rb") as f:
-        for chunk in iter(lambda: f.read(8 * 1024 * 1024), b""):
+        for chunk in iter(lambda: f.read(32 * 1024 * 1024), b""):
             hasher.update(chunk)
     return hasher.hexdigest()
 
@@ -157,15 +160,12 @@ class DownloadResult:
     error: Exception | None = None
 
 
-def process_model(entry: ModelEntry, output_dir: Path) -> DownloadResult:
+def process_model(entry: ModelEntry, output_dir: Path, hf_info: HfFileInfo) -> DownloadResult:
     """Check freshness and download a single model file. Never raises."""
     label = entry.local_filename
     local_path = output_dir / entry.local_filename
 
     try:
-        typer.echo(f"[checking]    {label}")
-        hf_info = get_hf_file_info(entry.repo_id, entry.hf_filename)
-
         if not hf_info.exists:
             if entry.optional:
                 typer.echo(f"[not-present] {label} — not in repo, skipping")
@@ -255,15 +255,37 @@ def main(
     resolved_output_dir = output_dir.expanduser().resolve()
     resolved_output_dir.mkdir(parents=True, exist_ok=True)
 
+    # Group filenames by repo so we can fetch each repo's metadata in one API call.
+    repo_to_filenames: dict[str, set[str]] = defaultdict(set)
+    for entry in MODELS:
+        repo_to_filenames[entry.repo_id].add(entry.hf_filename)
+
     typer.echo(f"Output directory : {resolved_output_dir}")
     typer.echo(f"Workers          : {workers}")
-    typer.echo(f"Models           : {len(MODELS)}\n")
+    typer.echo(f"Models           : {len(MODELS)} across {len(repo_to_filenames)} repos\n")
 
+    # Phase 1: fetch metadata for all repos in parallel (one API call per repo).
+    typer.echo("Fetching repo metadata...")
+    file_info_cache: dict[str, dict[str, HfFileInfo]] = {}
+    with ThreadPoolExecutor(max_workers=min(workers, len(repo_to_filenames))) as executor:
+        repo_futures: dict[Future[dict[str, HfFileInfo]], str] = {
+            executor.submit(fetch_repo_file_info, repo_id, filenames): repo_id
+            for repo_id, filenames in repo_to_filenames.items()
+        }
+        for future in as_completed(repo_futures):
+            file_info_cache[repo_futures[future]] = future.result()
+
+    # Phase 2: check freshness and download in parallel.
     results: list[DownloadResult] = []
 
     with ThreadPoolExecutor(max_workers=workers) as executor:
         future_map: dict[Future[DownloadResult], ModelEntry] = {
-            executor.submit(process_model, entry, resolved_output_dir): entry
+            executor.submit(
+                process_model,
+                entry,
+                resolved_output_dir,
+                file_info_cache[entry.repo_id][entry.hf_filename],
+            ): entry
             for entry in MODELS
         }
         for future in as_completed(future_map):
