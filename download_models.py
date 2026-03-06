@@ -57,11 +57,6 @@ MODELS: list[ModelEntry] = [
         local_filename="gpt-oss-20b-UD-Q4_K_XL.gguf",
     ),
     ModelEntry(
-        repo_id="unsloth/Qwen3.5-2B-GGUF",
-        hf_filename="Qwen3.5-2B-UD-Q4_K_XL.gguf",
-        local_filename="Qwen3.5-2B-UD-Q4_K_XL.gguf",
-    ),
-    ModelEntry(
         repo_id="unsloth/Qwen3.5-35B-A3B-GGUF",
         hf_filename="Qwen3.5-35B-A3B-UD-Q4_K_XL.gguf",
         local_filename="Qwen3.5-35B-A3B-UD-Q4_K_XL.gguf",
@@ -97,12 +92,6 @@ MODELS: list[ModelEntry] = [
         repo_id="unsloth/gpt-oss-20b-GGUF",
         hf_filename="mmproj-F16.gguf",
         local_filename="gpt-oss-20b-mmproj-F16.gguf",
-        optional=True,
-    ),
-    ModelEntry(
-        repo_id="unsloth/Qwen3.5-2B-GGUF",
-        hf_filename="mmproj-F16.gguf",
-        local_filename="Qwen3.5-2B-mmproj-F16.gguf",
         optional=True,
     ),
     ModelEntry(

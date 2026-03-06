@@ -16,7 +16,6 @@ A single-file Python script that downloads a curated set of GGUF model files fro
 |-------|-------------|------|
 | GLM-4.7-Flash | UD-Q4_K_XL | unsloth/GLM-4.7-Flash-GGUF |
 | gpt-oss-20b | UD-Q4_K_XL | unsloth/gpt-oss-20b-GGUF |
-| Qwen3.5-2B | UD-Q4_K_XL | unsloth/Qwen3.5-2B-GGUF |
 | Qwen3.5-4B | UD-Q8_K_XL | unsloth/Qwen3.5-4B-GGUF |
 | Qwen3.5-9B | UD-Q4_K_XL | unsloth/Qwen3.5-9B-GGUF |
 | Qwen3.5-35B-A3B | UD-Q4_K_XL | unsloth/Qwen3.5-35B-A3B-GGUF |
