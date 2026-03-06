@@ -183,15 +183,15 @@ class DownloadResult:
 
 
 def _update_cache(
-    cache: dict[str, dict], lock: threading.Lock, filename: str, sha256: str, path: Path,
+    cache: dict[str, dict], lock: threading.Lock, filename: str, sha256: str,
+    size: int, mtime_ns: int,
 ) -> None:
-    """Thread-safe update of a single cache entry using current file stat."""
-    stat = path.stat()
+    """Thread-safe update of a single cache entry."""
     with lock:
         cache[filename] = {
             "sha256": sha256,
-            "size": stat.st_size,
-            "mtime_ns": stat.st_mtime_ns,
+            "size": size,
+            "mtime_ns": mtime_ns,
         }
 
 
@@ -201,6 +201,8 @@ def process_model(
     hf_info: HfFileInfo,
     sha256_cache: dict[str, dict],
     cache_lock: threading.Lock,
+    *,
+    use_cache: bool = True,
 ) -> DownloadResult:
     """Check freshness and download a single model file. Never raises."""
     label = entry.local_filename
@@ -225,7 +227,8 @@ def process_model(
                     # Check local SHA256 cache before expensive hash.
                     cached = sha256_cache.get(entry.local_filename)
                     if (
-                        cached
+                        use_cache
+                        and cached
                         and cached["size"] == local_size
                         and cached["mtime_ns"] == local_stat.st_mtime_ns
                     ):
@@ -234,7 +237,12 @@ def process_model(
                         size_gib = local_size / (1024**3)
                         typer.echo(f"[hashing]     {label} ({size_gib:.1f} GiB)")
                         local_sha256 = compute_sha256(local_path)
-                        _update_cache(sha256_cache, cache_lock, entry.local_filename, local_sha256, local_path)
+                        # Re-stat after hash to get consistent mtime for the content we just read.
+                        post_hash_stat = local_path.stat()
+                        _update_cache(
+                            sha256_cache, cache_lock, entry.local_filename, local_sha256,
+                            post_hash_stat.st_size, post_hash_stat.st_mtime_ns,
+                        )
 
                     if local_sha256 == hf_info.sha256:
                         typer.echo(f"[up-to-date]  {label}")
@@ -259,7 +267,11 @@ def process_model(
 
         # Cache the known remote SHA256 so next run skips hashing this file.
         if hf_info.sha256 is not None:
-            _update_cache(sha256_cache, cache_lock, entry.local_filename, hf_info.sha256, local_path)
+            post_download_stat = local_path.stat()
+            _update_cache(
+                sha256_cache, cache_lock, entry.local_filename, hf_info.sha256,
+                post_download_stat.st_size, post_download_stat.st_mtime_ns,
+            )
 
         size_gib = local_path.stat().st_size / (1024**3)
         typer.echo(f"[done]        {label} ({size_gib:.2f} GiB)")
@@ -310,6 +322,11 @@ def main(
         help="Print all configured models and exit without downloading",
         is_eager=True,
     ),
+    no_cache: bool = typer.Option(
+        False,
+        "--no-cache",
+        help="Ignore local SHA256 cache and force re-hashing of all files",
+    ),
 ) -> None:
     """Download GGUF model files from HuggingFace with parallel downloads and SHA256 freshness checks."""
     if list_models:
@@ -352,6 +369,7 @@ def main(
     cache_lock = threading.Lock()
     results: list[DownloadResult] = []
 
+    use_cache = not no_cache
     with ThreadPoolExecutor(max_workers=workers) as executor:
         future_map: dict[Future[DownloadResult], ModelEntry] = {
             executor.submit(
@@ -361,6 +379,7 @@ def main(
                 file_info_cache[entry.repo_id][entry.hf_filename],
                 sha256_cache,
                 cache_lock,
+                use_cache=use_cache,
             ): entry
             for entry in MODELS
         }

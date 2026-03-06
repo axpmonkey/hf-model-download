@@ -63,6 +63,8 @@ Options:
                                     [default: 4]
   --list                            Print all configured models and exit
                                     without downloading
+  --no-cache                        Ignore local SHA256 cache and force
+                                    re-hashing of all files
   --help                            Show this message and exit.
 ```
 
@@ -77,6 +79,9 @@ uv run download_models.py --workers 8
 
 # List all configured models without downloading
 uv run download_models.py --list
+
+# Force re-hash all files (ignore cache)
+uv run download_models.py --no-cache
 ```
 
 ## How Freshness Checking Works
