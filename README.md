@@ -5,10 +5,11 @@ A single-file Python script that downloads a curated set of GGUF model files fro
 ## Features
 
 - **Parallel downloads** — configurable worker pool (default: 4)
-- **SHA256 freshness checks** — skips files that are already up-to-date
+- **Smart freshness checks** — size comparison skips obviously outdated files instantly; SHA256 verifies the rest
+- **Batched metadata** — fetches repo metadata once per repo (not per file), with a progress bar
 - **Optional files** — multimodal projector (`mmproj`) files are silently skipped when not present in a repo
 - **Zero install friction** — inline PEP 723 metadata means `uv run` handles dependencies automatically
-- **Clean status output** — per-file `[checking]`, `[up-to-date]`, `[downloading]`, `[done]`, `[failed]` labels
+- **Clean status output** — per-file `[hashing]`, `[up-to-date]`, `[downloading]`, `[done]`, `[failed]` labels
 
 ## Included Models
 
@@ -26,7 +27,7 @@ Each model also attempts to download an optional `mmproj-F16.gguf` multimodal pr
 
 ## Requirements
 
-- Python 3.10+
+- Python 3.11+
 - [`uv`](https://github.com/astral-sh/uv) (recommended) **or** pip
 
 ## Usage
@@ -80,11 +81,11 @@ uv run download_models.py --list
 
 ## How Freshness Checking Works
 
-For each model file, the script:
+For each repo, the script fetches metadata once (batched per repo, not per file) and then checks each file:
 
-1. Queries the HuggingFace API for the file's LFS SHA256 hash
-2. If the file already exists locally, computes its SHA256 and compares
-3. Skips the download if the hashes match; re-downloads if they differ or metadata is unavailable
+1. **Size check** — if the local file size differs from the remote, it's outdated; skip straight to re-download
+2. **SHA256 check** — if sizes match, compute the local SHA256 and compare against the LFS hash
+3. **No metadata** — if neither hash nor size is available, re-download conservatively
 
 This makes re-runs fast — only genuinely new or updated files are transferred.
 

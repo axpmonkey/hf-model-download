@@ -3,13 +3,18 @@
 # dependencies = ["huggingface_hub>=0.24", "typer>=0.12", "python-dotenv>=1.0"]
 # ///
 """
-Download GGUF model files from HuggingFace with parallel downloads and SHA256 freshness checks.
+Download GGUF model files from HuggingFace with parallel downloads and freshness checks.
+
+Freshness is checked via size comparison (instant) then SHA256 (thorough). Repo metadata
+is fetched once per repo, not per file.
 
 Usage:
     python download_models.py [--output-dir ~/models] [--workers 4]
 
 Dependencies:
-    pip install "huggingface_hub>=0.24" "typer>=0.12"
+    pip install "huggingface_hub>=0.24" "typer>=0.12" "python-dotenv>=1.0"
+
+Requires Python 3.11+ (hashlib.file_digest).
 """
 from __future__ import annotations
 
@@ -44,6 +49,7 @@ class ModelEntry:
 class HfFileInfo:
     exists: bool
     sha256: str | None
+    size: int | None
 
 
 MODELS: list[ModelEntry] = [
@@ -130,14 +136,16 @@ MODELS: list[ModelEntry] = [
 
 def fetch_repo_file_info(repo_id: str, filenames: set[str]) -> dict[str, HfFileInfo]:
     """Fetch existence and LFS SHA256 for all requested filenames in a repo in one API call."""
-    not_found = {f: HfFileInfo(exists=False, sha256=None) for f in filenames}
+    not_found = {f: HfFileInfo(exists=False, sha256=None, size=None) for f in filenames}
     try:
         info = HfApi().model_info(repo_id, files_metadata=True, token=os.getenv("HF_TOKEN"))
         result: dict[str, HfFileInfo] = {}
         for sibling in info.siblings or []:
             if sibling.rfilename in filenames:
                 sha256 = sibling.lfs.sha256 if sibling.lfs is not None else None
-                result[sibling.rfilename] = HfFileInfo(exists=True, sha256=sha256)
+                result[sibling.rfilename] = HfFileInfo(
+                    exists=True, sha256=sha256, size=sibling.size,
+                )
         return {**not_found, **result}
     except Exception:
         logger.debug("Failed to fetch metadata for %s", repo_id, exc_info=True)
@@ -145,12 +153,9 @@ def fetch_repo_file_info(repo_id: str, filenames: set[str]) -> dict[str, HfFileI
 
 
 def compute_sha256(path: Path) -> str:
-    """Compute SHA256 of a local file in 32 MiB chunks."""
-    hasher = hashlib.sha256()
+    """Compute SHA256 of a local file using hashlib.file_digest."""
     with path.open("rb") as f:
-        for chunk in iter(lambda: f.read(32 * 1024 * 1024), b""):
-            hasher.update(chunk)
-    return hasher.hexdigest()
+        return hashlib.file_digest(f, "sha256").hexdigest()
 
 
 @dataclass
@@ -174,11 +179,19 @@ def process_model(entry: ModelEntry, output_dir: Path, hf_info: HfFileInfo) -> D
             typer.echo(f"[downloading] {label}")
         elif local_path.exists():
             if hf_info.sha256 is not None:
-                local_sha256 = compute_sha256(local_path)
-                if local_sha256 == hf_info.sha256:
-                    typer.echo(f"[up-to-date]  {label}")
-                    return DownloadResult(entry, "skipped")
-                typer.echo(f"[outdated]    {label} — re-downloading")
+                local_size = local_path.stat().st_size
+                # Quick size check before expensive hash — different size means outdated.
+                if hf_info.size is not None and local_size != hf_info.size:
+                    size_gib = local_size / (1024**3)
+                    typer.echo(f"[outdated]    {label} — size mismatch ({size_gib:.1f} GiB local), re-downloading")
+                else:
+                    size_gib = local_size / (1024**3)
+                    typer.echo(f"[hashing]     {label} ({size_gib:.1f} GiB)")
+                    local_sha256 = compute_sha256(local_path)
+                    if local_sha256 == hf_info.sha256:
+                        typer.echo(f"[up-to-date]  {label}")
+                        return DownloadResult(entry, "skipped")
+                    typer.echo(f"[outdated]    {label} — re-downloading")
             else:
                 typer.echo(f"[no-metadata] {label} — SHA256 unavailable, re-downloading")
         else:
@@ -265,15 +278,22 @@ def main(
     typer.echo(f"Models           : {len(MODELS)} across {len(repo_to_filenames)} repos\n")
 
     # Phase 1: fetch metadata for all repos in parallel (one API call per repo).
-    typer.echo("Fetching repo metadata...")
+    total_repos = len(repo_to_filenames)
     file_info_cache: dict[str, dict[str, HfFileInfo]] = {}
-    with ThreadPoolExecutor(max_workers=min(workers, len(repo_to_filenames))) as executor:
+    with ThreadPoolExecutor(max_workers=min(workers, total_repos)) as executor:
         repo_futures: dict[Future[dict[str, HfFileInfo]], str] = {
             executor.submit(fetch_repo_file_info, repo_id, filenames): repo_id
             for repo_id, filenames in repo_to_filenames.items()
         }
-        for future in as_completed(repo_futures):
+        for completed_count, future in enumerate(as_completed(repo_futures), 1):
             file_info_cache[repo_futures[future]] = future.result()
+            filled = int(completed_count / total_repos * 20)
+            bar = "█" * filled + "░" * (20 - filled)
+            typer.echo(
+                f"\rFetching repo metadata  [{bar}] {completed_count}/{total_repos}",
+                nl=False,
+            )
+    typer.echo()
 
     # Phase 2: check freshness and download in parallel.
     results: list[DownloadResult] = []
