@@ -57,12 +57,10 @@ MODELS: list[ModelEntry] = [
     ModelEntry(
         repo_id="unsloth/GLM-4.7-Flash-GGUF",
         hf_filename="GLM-4.7-Flash-UD-Q4_K_XL.gguf",
-        mmproj_filename="mmproj-F16.gguf",
     ),
     ModelEntry(
         repo_id="unsloth/gpt-oss-20b-GGUF",
         hf_filename="gpt-oss-20b-UD-Q4_K_XL.gguf",
-        mmproj_filename="mmproj-F16.gguf",
     ),
     ModelEntry(
         repo_id="unsloth/Qwen3.5-35B-A3B-GGUF",
@@ -82,18 +80,15 @@ MODELS: list[ModelEntry] = [
     ModelEntry(
         repo_id="unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
         hf_filename="Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL.gguf",
-        mmproj_filename="mmproj-F16.gguf",
     ),
     # --- bartowski quantizations (Q4_K_M / Q8_0) ---
     ModelEntry(
         repo_id="bartowski/zai-org_GLM-4.7-Flash-GGUF",
         hf_filename="zai-org_GLM-4.7-Flash-Q4_K_M.gguf",
-        mmproj_filename="mmproj-zai-org_GLM-4.7-Flash-f16.gguf",
     ),
     ModelEntry(
         repo_id="bartowski/openai_gpt-oss-20b-GGUF",
         hf_filename="openai_gpt-oss-20b-Q4_K_M.gguf",
-        mmproj_filename="mmproj-openai_gpt-oss-20b-f16.gguf",
     ),
     ModelEntry(
         repo_id="bartowski/Qwen_Qwen3.5-35B-A3B-GGUF",
@@ -114,7 +109,6 @@ MODELS: list[ModelEntry] = [
     ModelEntry(
         repo_id="mradermacher/Qwen3.5-35B-A3B-heretic-GGUF",
         hf_filename="Qwen3.5-35B-A3B-heretic.Q4_K_M.gguf",
-        mmproj_filename="mmproj-F16.gguf",
     ),
     ModelEntry(
         repo_id="llmfan46/Qwen3.5-35B-A3B-heretic-v2-GGUF",
@@ -165,10 +159,11 @@ def process_download(item: DownloadItem, output_dir: Path) -> DownloadResult:
         return DownloadResult(item, "ok")
 
     except Exception as exc:
+        short_error = str(exc).split("\n", 1)[0]
         if item.optional:
-            typer.echo(f"[skipped]     {label} — {exc}")
+            typer.echo(f"[skipped]     {label} — {short_error}")
             return DownloadResult(item, "skipped")
-        typer.echo(f"[failed]      {label}: {exc}", err=True)
+        typer.echo(f"[failed]      {label} — {short_error}", err=True)
         logger.debug("Download failed for %s", label, exc_info=True)
         return DownloadResult(item, "failed", error=exc)
 
