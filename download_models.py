@@ -19,6 +19,7 @@ Usage:
 Dependencies:
     pip install "huggingface_hub>=1.5" "typer>=0.24" "python-dotenv>=1.2"
 """
+
 from __future__ import annotations
 
 import logging
@@ -42,7 +43,9 @@ logger = logging.getLogger(__name__)
 class ModelEntry:
     repo_id: str
     hf_filename: str
-    mmproj_filename: str | None = None  # optional multimodal projector file in the same repo
+    mmproj_filename: str | None = (
+        None  # optional multimodal projector file in the same repo
+    )
 
 
 @dataclass(frozen=True)
@@ -54,14 +57,6 @@ class DownloadItem:
 
 MODELS: list[ModelEntry] = [
     # --- unsloth quantizations (UD-Q4_K_XL / UD-Q8_K_XL) ---
-    ModelEntry(
-        repo_id="unsloth/GLM-4.7-Flash-GGUF",
-        hf_filename="GLM-4.7-Flash-UD-Q4_K_XL.gguf",
-    ),
-    ModelEntry(
-        repo_id="unsloth/gpt-oss-20b-GGUF",
-        hf_filename="gpt-oss-20b-UD-Q4_K_XL.gguf",
-    ),
     ModelEntry(
         repo_id="unsloth/Qwen3.5-35B-A3B-GGUF",
         hf_filename="Qwen3.5-35B-A3B-UD-Q4_K_XL.gguf",
@@ -82,14 +77,6 @@ MODELS: list[ModelEntry] = [
         hf_filename="Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL.gguf",
     ),
     # --- bartowski quantizations (Q4_K_M / Q8_0) ---
-    ModelEntry(
-        repo_id="bartowski/zai-org_GLM-4.7-Flash-GGUF",
-        hf_filename="zai-org_GLM-4.7-Flash-Q4_K_M.gguf",
-    ),
-    ModelEntry(
-        repo_id="bartowski/openai_gpt-oss-20b-GGUF",
-        hf_filename="openai_gpt-oss-20b-Q4_K_M.gguf",
-    ),
     ModelEntry(
         repo_id="bartowski/Qwen_Qwen3.5-35B-A3B-GGUF",
         hf_filename="Qwen_Qwen3.5-35B-A3B-Q4_K_M.gguf",
@@ -220,7 +207,9 @@ def main(
     unique_repos = {item.repo_id for item in DOWNLOAD_ITEMS}
     typer.echo(f"Output directory : {resolved_output_dir}")
     typer.echo(f"Workers          : {workers}")
-    typer.echo(f"Models           : {len(DOWNLOAD_ITEMS)} files across {len(unique_repos)} repos\n")
+    typer.echo(
+        f"Models           : {len(DOWNLOAD_ITEMS)} files across {len(unique_repos)} repos\n"
+    )
 
     results: list[DownloadResult] = []
     with ThreadPoolExecutor(max_workers=workers) as executor:
@@ -238,7 +227,11 @@ def main(
     typer.echo(f"\nSummary: {ok} ok, {skipped} skipped, {failed} failed")
 
     if failed:
-        failed_labels = [f"{r.item.repo_id}/{r.item.hf_filename}" for r in results if r.status == "failed"]
+        failed_labels = [
+            f"{r.item.repo_id}/{r.item.hf_filename}"
+            for r in results
+            if r.status == "failed"
+        ]
         typer.echo(f"Failed: {', '.join(failed_labels)}", err=True)
         raise typer.Exit(code=1)
 
