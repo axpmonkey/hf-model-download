@@ -3,7 +3,7 @@
 # dependencies = ["huggingface_hub>=1.5", "typer>=0.24", "python-dotenv>=1.2"]
 # ///
 """
-Download GGUF model files from HuggingFace with parallel downloads.
+Download GGUF model files from HuggingFace.
 
 Models are stored in a hierarchical folder structure mirroring HuggingFace:
     ~/models/{creator}/{repo}/{hf_filename}
@@ -14,7 +14,7 @@ that are already up-to-date are skipped automatically. Downloads use hf_xet
 transfers.
 
 Usage:
-    python download_models.py [--output-dir ~/models] [--workers 4]
+    python download_models.py [--output-dir ~/models]
 
 Dependencies:
     pip install "huggingface_hub>=1.5" "typer>=0.24" "python-dotenv>=1.2"
@@ -24,17 +24,14 @@ from __future__ import annotations
 
 import logging
 import os
-from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
 
 import typer
 from dotenv import load_dotenv
 from huggingface_hub import hf_hub_download
-from huggingface_hub.utils import disable_progress_bars
 
 load_dotenv()
-disable_progress_bars()
 
 logger = logging.getLogger(__name__)
 
@@ -128,15 +125,8 @@ class DownloadResult:
 def process_download(item: DownloadItem, output_dir: Path) -> DownloadResult:
     """Download a single file via hf_hub_download. Never raises."""
     label = f"{item.repo_id}/{item.hf_filename}"
-    local_path = output_dir / item.repo_id / item.hf_filename
-
     try:
-        if local_path.exists():
-            typer.echo(f"[updating]    {label}")
-        else:
-            typer.echo(f"[downloading] {label}")
-
-        local_path.parent.mkdir(parents=True, exist_ok=True)
+        typer.echo(f"[syncing] {label}")
         hf_hub_download(
             repo_id=item.repo_id,
             filename=item.hf_filename,
@@ -180,14 +170,6 @@ def main(
         help="Directory to save downloaded model files",
         show_default=True,
     ),
-    workers: int = typer.Option(
-        4,
-        "--workers",
-        help="Number of parallel download workers",
-        show_default=True,
-        min=1,
-        max=16,
-    ),
     list_models: bool = typer.Option(
         False,
         "--list",
@@ -195,7 +177,7 @@ def main(
         is_eager=True,
     ),
 ) -> None:
-    """Download GGUF model files from HuggingFace with parallel downloads."""
+    """Download GGUF model files from HuggingFace."""
     if list_models:
         _list_models()
 
@@ -206,19 +188,13 @@ def main(
 
     unique_repos = {item.repo_id for item in DOWNLOAD_ITEMS}
     typer.echo(f"Output directory : {resolved_output_dir}")
-    typer.echo(f"Workers          : {workers}")
     typer.echo(
         f"Models           : {len(DOWNLOAD_ITEMS)} files across {len(unique_repos)} repos\n"
     )
 
     results: list[DownloadResult] = []
-    with ThreadPoolExecutor(max_workers=workers) as executor:
-        future_map: dict[Future[DownloadResult], DownloadItem] = {
-            executor.submit(process_download, item, resolved_output_dir): item
-            for item in DOWNLOAD_ITEMS
-        }
-        for future in as_completed(future_map):
-            results.append(future.result())
+    for item in DOWNLOAD_ITEMS:
+        results.append(process_download(item, resolved_output_dir))
 
     ok = sum(1 for r in results if r.status == "ok")
     skipped = sum(1 for r in results if r.status == "skipped")
