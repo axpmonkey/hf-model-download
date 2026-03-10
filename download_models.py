@@ -22,7 +22,6 @@ Dependencies:
 
 from __future__ import annotations
 
-import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -33,23 +32,12 @@ from huggingface_hub import hf_hub_download
 
 load_dotenv()
 
-logger = logging.getLogger(__name__)
-
 
 @dataclass(frozen=True)
 class ModelEntry:
     repo_id: str
     hf_filename: str
-    mmproj_filename: str | None = (
-        None  # optional multimodal projector file in the same repo
-    )
-
-
-@dataclass(frozen=True)
-class DownloadItem:
-    repo_id: str
-    hf_filename: str
-    optional: bool = False
+    mmproj_filename: str | None = None
 
 
 MODELS: list[ModelEntry] = [
@@ -102,64 +90,25 @@ MODELS: list[ModelEntry] = [
 ]
 
 
-def _expand_models(models: list[ModelEntry]) -> list[DownloadItem]:
-    """Expand ModelEntry list into flat DownloadItem list, adding mmproj as optional items."""
-    items: list[DownloadItem] = []
-    for m in models:
-        items.append(DownloadItem(m.repo_id, m.hf_filename))
-        if m.mmproj_filename:
-            items.append(DownloadItem(m.repo_id, m.mmproj_filename, optional=True))
-    return items
-
-
-DOWNLOAD_ITEMS: list[DownloadItem] = _expand_models(MODELS)
-
-
-@dataclass
-class DownloadResult:
-    item: DownloadItem
-    status: str  # 'downloaded' | 'skipped' | 'failed'
-    error: Exception | None = None
-
-
-def process_download(item: DownloadItem, output_dir: Path) -> DownloadResult:
-    """Download a single file via hf_hub_download. Never raises."""
-    label = f"{item.repo_id}/{item.hf_filename}"
+def _download_file(repo_id: str, filename: str, output_dir: Path) -> bool:
+    """Download a single file. Returns True on success, False on failure."""
+    label = f"{repo_id}/{filename}"
     try:
         typer.echo(f"[syncing] {label}")
         hf_hub_download(
-            repo_id=item.repo_id,
-            filename=item.hf_filename,
-            local_dir=output_dir / item.repo_id,
+            repo_id=repo_id,
+            filename=filename,
+            local_dir=output_dir / repo_id,
             token=os.getenv("HF_TOKEN"),
         )
-        return DownloadResult(item, "ok")
-
+        return True
     except Exception as exc:
         short_error = str(exc).split("\n", 1)[0]
-        if item.optional:
-            typer.echo(f"[skipped]     {label} — {short_error}")
-            return DownloadResult(item, "skipped")
-        typer.echo(f"[failed]      {label} — {short_error}", err=True)
-        logger.debug("Download failed for %s", label, exc_info=True)
-        return DownloadResult(item, "failed", error=exc)
+        typer.echo(f"[failed]  {label} — {short_error}", err=True)
+        return False
 
 
 app = typer.Typer(add_completion=False)
-
-
-def _list_models() -> None:
-    """Print all configured models grouped by repo and exit."""
-    from itertools import groupby
-
-    items = DOWNLOAD_ITEMS
-    typer.echo(f"{len(items)} files across {len({i.repo_id for i in items})} repos:\n")
-    keyfunc = lambda i: i.repo_id  # noqa: E731
-    for repo_id, group in groupby(sorted(items, key=keyfunc), key=keyfunc):
-        typer.echo(f"  {repo_id}/")
-        for item in group:
-            typer.echo(f"    {item.hf_filename}")
-    raise typer.Exit()
 
 
 @app.command()
@@ -179,35 +128,37 @@ def main(
 ) -> None:
     """Download GGUF model files from HuggingFace."""
     if list_models:
-        _list_models()
-
-    logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
+        for model in MODELS:
+            typer.echo(f"  {model.repo_id}/{model.hf_filename}")
+            if model.mmproj_filename:
+                typer.echo(f"  {model.repo_id}/{model.mmproj_filename}")
+        raise typer.Exit()
 
     resolved_output_dir = output_dir.expanduser().resolve()
     resolved_output_dir.mkdir(parents=True, exist_ok=True)
 
-    unique_repos = {item.repo_id for item in DOWNLOAD_ITEMS}
     typer.echo(f"Output directory : {resolved_output_dir}")
-    typer.echo(
-        f"Models           : {len(DOWNLOAD_ITEMS)} files across {len(unique_repos)} repos\n"
-    )
+    typer.echo(f"Models           : {len(MODELS)} models\n")
 
-    results: list[DownloadResult] = []
-    for item in DOWNLOAD_ITEMS:
-        results.append(process_download(item, resolved_output_dir))
+    ok = 0
+    skipped = 0
+    failed_labels: list[str] = []
 
-    ok = sum(1 for r in results if r.status == "ok")
-    skipped = sum(1 for r in results if r.status == "skipped")
-    failed = sum(1 for r in results if r.status == "failed")
+    for model in MODELS:
+        if _download_file(model.repo_id, model.hf_filename, resolved_output_dir):
+            ok += 1
+        else:
+            failed_labels.append(f"{model.repo_id}/{model.hf_filename}")
 
-    typer.echo(f"\nSummary: {ok} ok, {skipped} skipped, {failed} failed")
+        if model.mmproj_filename:
+            if _download_file(model.repo_id, model.mmproj_filename, resolved_output_dir):
+                ok += 1
+            else:
+                skipped += 1
 
-    if failed:
-        failed_labels = [
-            f"{r.item.repo_id}/{r.item.hf_filename}"
-            for r in results
-            if r.status == "failed"
-        ]
+    typer.echo(f"\nSummary: {ok} ok, {skipped} skipped, {len(failed_labels)} failed")
+
+    if failed_labels:
         typer.echo(f"Failed: {', '.join(failed_labels)}", err=True)
         raise typer.Exit(code=1)
 
