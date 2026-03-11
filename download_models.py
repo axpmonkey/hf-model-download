@@ -77,11 +77,7 @@ MODELS: list[ModelEntry] = [
         hf_filename="Qwen_Qwen3.5-9B-Q4_K_M.gguf",
         mmproj_filename="mmproj-Qwen_Qwen3.5-9B-f16.gguf",
     ),
-    # --- mradermacher / llmfan46 heretic variants ---
-    ModelEntry(
-        repo_id="mradermacher/Qwen3.5-35B-A3B-heretic-GGUF",
-        hf_filename="Qwen3.5-35B-A3B-heretic.Q4_K_M.gguf",
-    ),
+    # --- llmfan46 heretic variant ---
     ModelEntry(
         repo_id="llmfan46/Qwen3.5-35B-A3B-heretic-v2-GGUF",
         hf_filename="Qwen3.5-35B-A3B-heretic-v2-Q4_K_M.gguf",
