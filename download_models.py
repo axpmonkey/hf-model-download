@@ -49,7 +49,7 @@ MODELS: list[ModelEntry] = [
     ),
     ModelEntry(
         repo_id="unsloth/Qwen3.5-9B-GGUF",
-        hf_filename="Qwen3.5-9B-UD-Q4_K_XL.gguf",
+        hf_filename="Qwen3.5-9B-UD-Q5_K_XL.gguf",
         mmproj_filename="mmproj-F16.gguf",
     ),
     ModelEntry(
