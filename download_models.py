@@ -41,22 +41,7 @@ class ModelEntry:
 
 
 MODELS: list[ModelEntry] = [
-    # --- unsloth quantizations (UD-Q4_K_XL / UD-Q8_K_XL) ---
-    ModelEntry(
-        repo_id="unsloth/Qwen3.5-35B-A3B-GGUF",
-        hf_filename="Qwen3.5-35B-A3B-UD-Q4_K_XL.gguf",
-        mmproj_filename="mmproj-F16.gguf",
-    ),
-    ModelEntry(
-        repo_id="unsloth/Qwen3.5-4B-GGUF",
-        hf_filename="Qwen3.5-4B-UD-Q8_K_XL.gguf",
-        mmproj_filename="mmproj-F16.gguf",
-    ),
-    ModelEntry(
-        repo_id="unsloth/Qwen3.5-9B-GGUF",
-        hf_filename="Qwen3.5-9B-UD-Q4_K_XL.gguf",
-        mmproj_filename="mmproj-F16.gguf",
-    ),
+    # --- unsloth quantizations ---
     ModelEntry(
         repo_id="unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
         hf_filename="Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL.gguf",
@@ -74,14 +59,10 @@ MODELS: list[ModelEntry] = [
     ),
     ModelEntry(
         repo_id="bartowski/Qwen_Qwen3.5-9B-GGUF",
-        hf_filename="Qwen_Qwen3.5-9B-Q4_K_M.gguf",
+        hf_filename="Qwen_Qwen3.5-9B-Q6_K_L.gguf",
         mmproj_filename="mmproj-Qwen_Qwen3.5-9B-f16.gguf",
     ),
-    # --- mradermacher / llmfan46 heretic variants ---
-    ModelEntry(
-        repo_id="mradermacher/Qwen3.5-35B-A3B-heretic-GGUF",
-        hf_filename="Qwen3.5-35B-A3B-heretic.Q4_K_M.gguf",
-    ),
+    # --- llmfan46 heretic variants ---
     ModelEntry(
         repo_id="llmfan46/Qwen3.5-35B-A3B-heretic-v2-GGUF",
         hf_filename="Qwen3.5-35B-A3B-heretic-v2-Q4_K_M.gguf",
