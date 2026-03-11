@@ -41,28 +41,28 @@ class ModelEntry:
 
 
 MODELS: list[ModelEntry] = [
-    # --- unsloth quantizations ---
+    # --- unsloth quantizations (UD-Q4_K_XL / UD-Q8_K_XL) ---
+    ModelEntry(
+        repo_id="unsloth/Qwen3.5-4B-GGUF",
+        hf_filename="Qwen3.5-4B-UD-Q8_K_XL.gguf",
+        mmproj_filename="mmproj-F16.gguf",
+    ),
+    ModelEntry(
+        repo_id="unsloth/Qwen3.5-9B-GGUF",
+        hf_filename="Qwen3.5-9B-UD-Q6_K_XL.gguf",
+        mmproj_filename="mmproj-F16.gguf",
+    ),
     ModelEntry(
         repo_id="unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
         hf_filename="Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL.gguf",
     ),
-    # --- bartowski quantizations (Q4_K_M / Q8_0) ---
+    # --- bartowski quantization (Q4_K_M) ---
     ModelEntry(
         repo_id="bartowski/Qwen_Qwen3.5-35B-A3B-GGUF",
         hf_filename="Qwen_Qwen3.5-35B-A3B-Q4_K_M.gguf",
         mmproj_filename="mmproj-Qwen_Qwen3.5-35B-A3B-f16.gguf",
     ),
-    ModelEntry(
-        repo_id="bartowski/Qwen_Qwen3.5-4B-GGUF",
-        hf_filename="Qwen_Qwen3.5-4B-Q8_0.gguf",
-        mmproj_filename="mmproj-Qwen_Qwen3.5-4B-f16.gguf",
-    ),
-    ModelEntry(
-        repo_id="bartowski/Qwen_Qwen3.5-9B-GGUF",
-        hf_filename="Qwen_Qwen3.5-9B-Q6_K_L.gguf",
-        mmproj_filename="mmproj-Qwen_Qwen3.5-9B-f16.gguf",
-    ),
-    # --- llmfan46 heretic variants ---
+    # --- llmfan46 heretic variant ---
     ModelEntry(
         repo_id="llmfan46/Qwen3.5-35B-A3B-heretic-v2-GGUF",
         hf_filename="Qwen3.5-35B-A3B-heretic-v2-Q4_K_M.gguf",
