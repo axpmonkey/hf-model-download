@@ -17,7 +17,7 @@ A single-file Python script that downloads a curated set of GGUF model files fro
 | Qwen3.5-4B | UD-Q8_K_XL | unsloth/Qwen3.5-4B-GGUF |
 | Qwen3.5-9B | UD-Q6_K_XL | unsloth/Qwen3.5-9B-GGUF |
 | Qwen3-Coder-30B-A3B-Instruct | UD-Q4_K_XL | unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF |
-| Qwen3.5-35B-A3B | Q4_K_M | bartowski/Qwen_Qwen3.5-35B-A3B-GGUF |
+| Qwen3.5-35B-A3B | UD-Q4_K_XL | unsloth/Qwen3.5-35B-A3B-GGUF |
 | Qwen3.5-35B-A3B-heretic-v2 | Q4_K_M | llmfan46/Qwen3.5-35B-A3B-heretic-v2-GGUF |
 
 Models with a multimodal projector also download the corresponding `mmproj` file.
@@ -82,12 +82,11 @@ Downloads are organized by repo, mirroring the HuggingFace hierarchy:
 │   ├── Qwen3.5-9B-GGUF/
 │   │   ├── Qwen3.5-9B-UD-Q6_K_XL.gguf
 │   │   └── mmproj-F16.gguf
+│   ├── Qwen3.5-35B-A3B-GGUF/
+│   │   ├── Qwen3.5-35B-A3B-UD-Q4_K_XL.gguf
+│   │   └── mmproj-F16.gguf
 │   └── Qwen3-Coder-30B-A3B-Instruct-GGUF/
 │       └── Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL.gguf
-├── bartowski/
-│   └── Qwen_Qwen3.5-35B-A3B-GGUF/
-│       ├── Qwen_Qwen3.5-35B-A3B-Q4_K_M.gguf
-│       └── mmproj-Qwen_Qwen3.5-35B-A3B-f16.gguf
 └── llmfan46/
     └── Qwen3.5-35B-A3B-heretic-v2-GGUF/
         ├── Qwen3.5-35B-A3B-heretic-v2-Q4_K_M.gguf

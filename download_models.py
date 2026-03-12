@@ -56,11 +56,10 @@ MODELS: list[ModelEntry] = [
         repo_id="unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
         hf_filename="Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL.gguf",
     ),
-    # --- bartowski quantization (Q4_K_M) ---
     ModelEntry(
-        repo_id="bartowski/Qwen_Qwen3.5-35B-A3B-GGUF",
-        hf_filename="Qwen_Qwen3.5-35B-A3B-Q4_K_M.gguf",
-        mmproj_filename="mmproj-Qwen_Qwen3.5-35B-A3B-f16.gguf",
+        repo_id="unsloth/Qwen3.5-35B-A3B-GGUF",
+        hf_filename="Qwen3.5-35B-A3B-UD-Q4_K_XL.gguf",
+        mmproj_filename="mmproj-F16.gguf",
     ),
     # --- llmfan46 heretic variant ---
     ModelEntry(
