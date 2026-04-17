@@ -41,12 +41,7 @@ class ModelEntry:
 
 
 MODELS: list[ModelEntry] = [
-    # --- unsloth quantizations (UD-Q4_K_XL / UD-Q8_K_XL) ---
-    ModelEntry(
-        repo_id="unsloth/Qwen3.5-4B-GGUF",
-        hf_filename="Qwen3.5-4B-UD-Q8_K_XL.gguf",
-        mmproj_filename="mmproj-F16.gguf",
-    ),
+    # --- unsloth quantizations ---
     ModelEntry(
         repo_id="unsloth/Qwen3.5-9B-GGUF",
         hf_filename="Qwen3.5-9B-UD-Q5_K_XL.gguf",
@@ -57,20 +52,15 @@ MODELS: list[ModelEntry] = [
         hf_filename="Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL.gguf",
     ),
     ModelEntry(
-        repo_id="unsloth/Qwen3.5-35B-A3B-GGUF",
-        hf_filename="Qwen3.5-35B-A3B-UD-Q4_K_XL.gguf",
-        mmproj_filename="mmproj-F16.gguf",
-    ),
-    ModelEntry(
         repo_id="unsloth/Qwen3.6-35B-A3B-GGUF",
         hf_filename="Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf",
         mmproj_filename="mmproj-F16.gguf",
     ),
-    # --- llmfan46 heretic variant ---
+    # --- HauhauCS uncensored variant ---
     ModelEntry(
-        repo_id="llmfan46/Qwen3.5-35B-A3B-heretic-v2-GGUF",
-        hf_filename="Qwen3.5-35B-A3B-heretic-v2-Q4_K_M.gguf",
-        mmproj_filename="Qwen3.5-35B-A3B-mmproj-BF16.gguf",
+        repo_id="HauhauCS/Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive",
+        hf_filename="Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf",
+        mmproj_filename="mmproj-Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive-f16.gguf",
     ),
 ]
 
