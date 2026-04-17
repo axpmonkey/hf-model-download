@@ -47,54 +47,6 @@ services:
     networks:
       - llama-network
 
-  llama-qwen36-thinking:
-    image: ghcr.io/ggml-org/llama.cpp:server-cuda
-    container_name: llama-qwen36-thinking
-    ports:
-      - "8080:8080"
-    volumes:
-      - /home/steve/models:/models
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-    ulimits:
-      memlock: -1
-      stack: 67108864
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 180s
-    command: >
-      -m /models/unsloth/Qwen3.6-35B-A3B-GGUF/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf
-      --mmproj /models/unsloth/Qwen3.6-35B-A3B-GGUF/mmproj-F16.gguf
-      --alias qwen36-thinking-unsloth
-      --host 0.0.0.0
-      --port 8080
-      -c 32768
-      --jinja
-      -fit on
-      -fitt 3072
-      -fa on
-      --no-mmap
-      -ctk q8_0
-      -ctv q8_0
-      --temp 1.0
-      --top-p 0.95
-      --top-k 20
-      --min-p 0.0
-      --repeat-penalty 1.0
-      --presence-penalty 1.5
-      --chat-template-kwargs '{"preserve_thinking": true}'
-    restart: unless-stopped
-    networks:
-      - llama-network
-
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
     container_name: open-webui
@@ -103,7 +55,7 @@ services:
     volumes:
       - open-webui-data:/app/backend/data
     environment:
-      - OPENAI_API_BASE_URLS=http://llama-qwen36-thinking:8080;http://llama-tasks:9000
+      - OPENAI_API_BASE_URLS=http://host.docker.internal:8080;http://llama-tasks:9000
       - OPENAI_API_KEYS=sk-dummy;sk-dummy
       - WEBUI_AUTH=false
       - TZ=America/New_York
@@ -111,8 +63,6 @@ services:
       - "host.docker.internal:host-gateway"
     depends_on:
       llama-tasks:
-        condition: service_healthy
-      llama-qwen36-thinking:
         condition: service_healthy
     restart: unless-stopped
     networks:
