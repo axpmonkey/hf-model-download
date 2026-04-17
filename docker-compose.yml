@@ -1,0 +1,90 @@
+services:
+  llama-tasks:
+    image: ghcr.io/ggml-org/llama.cpp:server-cuda
+    container_name: llama-tasks
+    ports:
+      - "9000:9000"
+    volumes:
+      - /home/steve/models:/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    command: >
+      -m /models/bartowski/Qwen2.5-1.5B-Instruct-GGUF/Qwen2.5-1.5B-Instruct-Q4_K_M.gguf
+      --alias qwen2.5-1.5b
+      --port 9000
+      --host 0.0.0.0
+      --jinja
+      --ctx-size 4096
+      --flash-attn on
+      -fit on
+      -fitt 128
+      --parallel 1
+      --batch-size 512
+      --ubatch-size 512
+      --cache-type-k q8_0
+      --cache-type-v q8_0
+      -cram 1024
+      --temp 0.7
+      --top-p 0.8
+      --top-k 20
+      --min-p 0.0
+      --repeat-penalty 1.05
+    restart: unless-stopped
+    networks:
+      - llama-network
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    ports:
+      - "11080:8080"
+    volumes:
+      - open-webui-data:/app/backend/data
+    environment:
+      - OPENAI_API_BASE_URLS=http://host.docker.internal:8080;http://llama-tasks:9000
+      - OPENAI_API_KEYS=sk-dummy;sk-dummy
+      - WEBUI_AUTH=false
+      - TZ=America/New_York
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      llama-tasks:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - llama-network
+
+  open-terminal:
+    image: ghcr.io/open-webui/open-terminal
+    container_name: open-terminal
+    ports:
+      - "8000:8000"
+    volumes:
+      - open-terminal:/home/user
+    environment:
+      - OPEN_TERMINAL_API_KEY=sk-dummy
+    restart: unless-stopped
+    networks:
+      - llama-network
+
+networks:
+  llama-network:
+    driver: bridge
+
+volumes:
+  open-webui-data:
+  open-terminal:

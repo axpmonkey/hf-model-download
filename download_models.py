@@ -41,6 +41,11 @@ class ModelEntry:
 
 
 MODELS: list[ModelEntry] = [
+    # --- bartowski quantizations ---
+    ModelEntry(
+        repo_id="bartowski/Qwen2.5-1.5B-Instruct-GGUF",
+        hf_filename="Qwen2.5-1.5B-Instruct-Q4_K_M.gguf",
+    ),
     # --- unsloth quantizations ---
     ModelEntry(
         repo_id="unsloth/Qwen3.5-9B-GGUF",
