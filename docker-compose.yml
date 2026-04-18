@@ -127,6 +127,12 @@ services:
       - open-terminal:/home/user
     environment:
       - OPEN_TERMINAL_API_KEY=sk-dummy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     restart: unless-stopped
     networks:
       - llama-network
