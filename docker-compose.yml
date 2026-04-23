@@ -79,7 +79,7 @@ services:
       -c 32768
       --jinja
       -fit on
-      -fitt 3072
+      -fitt 2048
       -fa on
       --no-mmap
       -ctk q8_0
@@ -91,6 +91,11 @@ services:
       --repeat-penalty 1.0
       --presence-penalty 1.5
       --chat-template-kwargs '{"preserve_thinking": true}'
+      --no-mmproj-offload
+      --spec-type ngram-mod
+      --spec-ngram-size-n 24
+      --draft-min 48
+      --draft-max 64
     restart: unless-stopped
     networks:
       - llama-network
