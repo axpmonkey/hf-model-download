@@ -71,7 +71,7 @@ services:
       retries: 3
       start_period: 180s
     command: >
-      -m /models/unsloth/Qwen3.6-35B-A3B-GGUF/Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf
+      -m /models/unsloth/Qwen3.6-35B-A3B-GGUF/Qwen3.6-35B-A3B-UD-Q5_K_XL.gguf
       --mmproj /models/unsloth/Qwen3.6-35B-A3B-GGUF/mmproj-F16.gguf
       --alias qwen36-thinking-unsloth
       --host 0.0.0.0
