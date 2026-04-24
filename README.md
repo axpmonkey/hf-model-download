@@ -7,18 +7,19 @@ A single-file Python script that downloads a curated set of GGUF model files fro
 - **Native caching** — `huggingface_hub` tracks downloaded files internally, so repeat runs skip files that haven't changed upstream
 - **Fast transfers** — downloads use `hf_xet` (bundled with `huggingface_hub` ≥0.32) for chunk-based deduplication
 - **Hierarchical storage** — files are saved in a folder structure mirroring HuggingFace repos: `~/models/{creator}/{repo}/{filename}`
-- **Multimodal projectors** — `mmproj` files are downloaded alongside models when configured; failures are counted as skips, not errors
+- **Multimodal projectors** — `mmproj` files are downloaded alongside models when configured; configured projector failures are treated as errors
 - **Zero install friction** — inline PEP 723 metadata means `uv run` handles dependencies automatically
 
 ## Included Models
 
 | Model | Quantization | Repo |
 |-------|-------------|------|
-| Qwen3.5-4B | UD-Q8_K_XL | unsloth/Qwen3.5-4B-GGUF |
+| Qwen2.5-1.5B-Instruct | Q4_K_M | bartowski/Qwen2.5-1.5B-Instruct-GGUF |
 | Qwen3.5-9B | UD-Q5_K_XL | unsloth/Qwen3.5-9B-GGUF |
 | Qwen3-Coder-30B-A3B-Instruct | UD-Q4_K_XL | unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF |
-| Qwen3.5-35B-A3B | UD-Q4_K_XL | unsloth/Qwen3.5-35B-A3B-GGUF |
-| Qwen3.5-35B-A3B-heretic-v2 | Q4_K_M | llmfan46/Qwen3.5-35B-A3B-heretic-v2-GGUF |
+| Qwen3.6-35B-A3B | UD-Q4_K_XL | unsloth/Qwen3.6-35B-A3B-GGUF |
+| Qwen3.6-35B-A3B | UD-Q5_K_XL | unsloth/Qwen3.6-35B-A3B-GGUF |
+| Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive | Q4_K_M | HauhauCS/Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive |
 
 Models with a multimodal projector also download the corresponding `mmproj` file.
 
@@ -44,6 +45,21 @@ pip install "huggingface_hub>=1.5" "typer>=0.24" "python-dotenv>=1.2"
 python download_models.py
 ```
 
+### Server wrapper without uv
+
+Use `run.sh` on systems where `uv` is not installed. It creates `.venv` on
+first run, installs dependencies once, and then reuses that environment:
+
+```bash
+./run.sh --output-dir ~/models
+```
+
+To intentionally update the Python dependencies:
+
+```bash
+./run.sh --upgrade-deps --output-dir ~/models
+```
+
 ## Options
 
 ```
@@ -67,6 +83,9 @@ uv run download_models.py --output-dir /mnt/models
 
 # List all configured models without downloading
 uv run download_models.py --list
+
+# Server wrapper with dependency upgrade
+./run.sh --upgrade-deps --list
 ```
 
 ## Folder Structure
@@ -75,22 +94,23 @@ Downloads are organized by repo, mirroring the HuggingFace hierarchy:
 
 ```
 ~/models/
+├── bartowski/
+│   └── Qwen2.5-1.5B-Instruct-GGUF/
+│       └── Qwen2.5-1.5B-Instruct-Q4_K_M.gguf
 ├── unsloth/
-│   ├── Qwen3.5-4B-GGUF/
-│   │   ├── Qwen3.5-4B-UD-Q8_K_XL.gguf
-│   │   └── mmproj-F16.gguf
 │   ├── Qwen3.5-9B-GGUF/
 │   │   ├── Qwen3.5-9B-UD-Q5_K_XL.gguf
 │   │   └── mmproj-F16.gguf
-│   ├── Qwen3.5-35B-A3B-GGUF/
-│   │   ├── Qwen3.5-35B-A3B-UD-Q4_K_XL.gguf
+│   ├── Qwen3.6-35B-A3B-GGUF/
+│   │   ├── Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf
+│   │   ├── Qwen3.6-35B-A3B-UD-Q5_K_XL.gguf
 │   │   └── mmproj-F16.gguf
 │   └── Qwen3-Coder-30B-A3B-Instruct-GGUF/
 │       └── Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL.gguf
-└── llmfan46/
-    └── Qwen3.5-35B-A3B-heretic-v2-GGUF/
-        ├── Qwen3.5-35B-A3B-heretic-v2-Q4_K_M.gguf
-        └── Qwen3.5-35B-A3B-mmproj-BF16.gguf
+└── HauhauCS/
+    └── Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive/
+        ├── Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf
+        └── mmproj-Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive-f16.gguf
 ```
 
 ## Customizing the Model List

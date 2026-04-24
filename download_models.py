@@ -126,7 +126,6 @@ def main(
     typer.echo(f"Models           : {len(MODELS)} models\n")
 
     ok = 0
-    skipped = 0
     failed_labels: list[str] = []
 
     for model in MODELS:
@@ -139,9 +138,9 @@ def main(
             if _download_file(model.repo_id, model.mmproj_filename, resolved_output_dir):
                 ok += 1
             else:
-                skipped += 1
+                failed_labels.append(f"{model.repo_id}/{model.mmproj_filename}")
 
-    typer.echo(f"\nSummary: {ok} ok, {skipped} skipped, {len(failed_labels)} failed")
+    typer.echo(f"\nSummary: {ok} ok, {len(failed_labels)} failed")
 
     if failed_labels:
         typer.echo(f"Failed: {', '.join(failed_labels)}", err=True)
