@@ -66,11 +66,11 @@ MODELS: list[ModelEntry] = [
         hf_filename="Qwen3.6-35B-A3B-UD-Q5_K_XL.gguf",
         mmproj_filename="mmproj-F16.gguf",
     ),
-    # --- HauhauCS uncensored variant ---
+    # --- llmfan46 uncensored variant ---
     ModelEntry(
-        repo_id="HauhauCS/Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive",
-        hf_filename="Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf",
-        mmproj_filename="mmproj-Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive-f16.gguf",
+        repo_id="llmfan46/Qwen3.6-35B-A3B-uncensored-heretic-GGUF",
+        hf_filename="Qwen3.6-35B-A3B-uncensored-heretic-Q4_K_M.gguf",
+        mmproj_filename="Qwen3.6-35B-A3B-v2.1-mmproj-BF16.gguf",
     ),
 ]
 

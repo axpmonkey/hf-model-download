@@ -19,7 +19,7 @@ A single-file Python script that downloads a curated set of GGUF model files fro
 | Qwen3-Coder-30B-A3B-Instruct | UD-Q4_K_XL | unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF |
 | Qwen3.6-35B-A3B | UD-Q4_K_XL | unsloth/Qwen3.6-35B-A3B-GGUF |
 | Qwen3.6-35B-A3B | UD-Q5_K_XL | unsloth/Qwen3.6-35B-A3B-GGUF |
-| Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive | Q4_K_M | HauhauCS/Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive |
+| Qwen3.6-35B-A3B-uncensored-heretic | Q4_K_M | llmfan46/Qwen3.6-35B-A3B-uncensored-heretic-GGUF |
 
 Models with a multimodal projector also download the corresponding `mmproj` file.
 
@@ -107,10 +107,10 @@ Downloads are organized by repo, mirroring the HuggingFace hierarchy:
 │   │   └── mmproj-F16.gguf
 │   └── Qwen3-Coder-30B-A3B-Instruct-GGUF/
 │       └── Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL.gguf
-└── HauhauCS/
-    └── Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive/
-        ├── Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf
-        └── mmproj-Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive-f16.gguf
+└── llmfan46/
+    └── Qwen3.6-35B-A3B-uncensored-heretic-GGUF/
+        ├── Qwen3.6-35B-A3B-uncensored-heretic-Q4_K_M.gguf
+        └── Qwen3.6-35B-A3B-v2.1-mmproj-BF16.gguf
 ```
 
 ## Customizing the Model List
