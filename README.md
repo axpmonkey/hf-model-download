@@ -110,7 +110,7 @@ Downloads are organized by repo, mirroring the HuggingFace hierarchy:
 └── llmfan46/
     └── Qwen3.6-35B-A3B-uncensored-heretic-GGUF/
         ├── Qwen3.6-35B-A3B-uncensored-heretic-Q4_K_M.gguf
-        └── Qwen3.6-35B-A3B-v2.1-mmproj-BF16.gguf
+        └── Qwen3.6-35B-A3B-mmproj-BF16.gguf
 ```
 
 ## Customizing the Model List

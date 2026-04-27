@@ -70,7 +70,7 @@ MODELS: list[ModelEntry] = [
     ModelEntry(
         repo_id="llmfan46/Qwen3.6-35B-A3B-uncensored-heretic-GGUF",
         hf_filename="Qwen3.6-35B-A3B-uncensored-heretic-Q4_K_M.gguf",
-        mmproj_filename="Qwen3.6-35B-A3B-v2.1-mmproj-BF16.gguf",
+        mmproj_filename="Qwen3.6-35B-A3B-mmproj-BF16.gguf",
     ),
 ]
 
